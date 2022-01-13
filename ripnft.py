@@ -55,6 +55,7 @@ if __name__ == "__main__":
     parser.add_argument("--suffix", help="filename suffix such as .json", type=str)
     parser.add_argument("--ipfs", help="Use url as IPFS hash", action="store_true")
     args = parser.parse_args()
-    asyncio.run(main(args))
+    if args.url and args.limit:
+        asyncio.run(main(args))
 
 # "ipfs://QmNN69NeVQJ3iCscZvxgrzdUdRuXD3E7gRZWesDcEjpPTt/"
