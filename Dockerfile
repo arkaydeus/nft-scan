@@ -1,4 +1,4 @@
-FROM python:3.10-alpine
+FROM python:3.10
 WORKDIR /nft-rip
 COPY . .
 RUN pip3 install --no-cache-dir pipenv

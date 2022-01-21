@@ -89,7 +89,7 @@ def load_data_list(filename):
         print("Loaded file")
 
 
-def build_dataframe(data_list, categorical=True):
+def build_dataframe(data_list, categorical=True, contract: str = ""):
     df = pd.DataFrame(data_list)
     df.set_index("index", inplace=True)
 
@@ -112,9 +112,19 @@ def build_dataframe(data_list, categorical=True):
         component_series = df[col].map(lookup_table).astype("float64")
         rarity_components.append(component_series)
 
-    df["Rarity score"] = reduce(lambda x, y: x.add(y), rarity_components)
-    df["Standard score"] = ((df["Rarity score"]) / df["Rarity score"].std()).round(3)
-    df["Rank"] = df["Rarity score"].rank(ascending=False)
-    df["Rarity score"] = df["Rarity score"].map("{:,.0f}".format)
+    if rarity_components:
 
-    return df.sort_values("Rank")
+        df["Rarity score"] = reduce(lambda x, y: x.add(y), rarity_components)
+        df["Standard score"] = ((df["Rarity score"]) / df["Rarity score"].std()).round(
+            3
+        )
+        df["Rank"] = df["Rarity score"].rank(ascending=False)
+        df["Rarity score"] = df["Rarity score"].map("{:,.0f}".format)
+        df["OS link"] = (
+            "https://opensea.io/assets/" + contract + "/" + df.index.astype("str")
+        )
+
+        return df.sort_values("Rank")
+
+    else:
+        return

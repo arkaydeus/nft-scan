@@ -9,6 +9,7 @@ ipfsapi = "*"
 web3 = "*"
 pandas = "*"
 openpyxl = "*"
+ipykernel = "*"
 
 [dev-packages]
 black = "*"
