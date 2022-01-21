@@ -68,9 +68,9 @@ async def get_os_assets(
         }
         async with session.get(url, headers=headers) as response:
 
-            response_data: Dict = await response.json()
             if response.status == 200:
 
+                response_data: Dict = await response.json()
                 assets = []
                 response_list = response_data["assets"]
 
@@ -121,4 +121,6 @@ async def get_os_assets(
                 return assets
 
             else:
-                return response
+                print(
+                    "Error reading data from OS. Probably their API is down. Happens constantly."
+                )

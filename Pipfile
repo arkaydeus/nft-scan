@@ -16,3 +16,7 @@ black = "*"
 
 [requires]
 python_version = "3.10"
+
+[scripts]
+build="docker build --tag arkaydeus/nft-rip ."
+push="docker push arkaydeus/nft-rip"
