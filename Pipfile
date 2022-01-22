@@ -10,6 +10,7 @@ web3 = "*"
 pandas = "*"
 openpyxl = "*"
 ipykernel = "*"
+python-decouple = "*"
 
 [dev-packages]
 black = "*"

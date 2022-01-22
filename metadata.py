@@ -1,8 +1,10 @@
 import asyncio
 import json
 import time
+from distutils.command.config import config
 from functools import reduce
 from typing import List, Tuple
+
 
 import aiohttp
 import pandas as pd
@@ -71,7 +73,7 @@ def process_json(blobs):
                 item_dict[attribute["trait_type"]] = attribute["value"]
             data_list.append(item_dict)
         except:
-            print("Problem with:", item[0])
+            print("Could not extract token with ID:", item[0])
             print(item)
 
     return data_list

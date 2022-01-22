@@ -2,7 +2,9 @@ import argparse
 import asyncio
 from datetime import datetime
 from typing import List
-from os_query import OsAsset, get_os_assets
+import sys
+
+from decouple import config
 from pandas import DataFrame
 
 from metadata import (
@@ -11,6 +13,8 @@ from metadata import (
     get_all_json_objects,
     process_json,
 )
+from os_query import OsAsset, get_os_assets
+import blockchain
 
 
 async def get_data(url: str, limit: int, suffix: str):
@@ -68,6 +72,90 @@ async def main(url: str, limit: int, suffix: str, contract: str):
         df.to_excel(filename)
 
 
+def clean_url(input_url: str) -> str:
+    """Removes the end of the url
+
+    Args:
+        input_url (str): Url from getURI
+
+    Returns:
+        [type]: Clean URL without token specific extension
+    """
+    components = input_url.split("/")[:-1]
+    return "/".join(components) + "/"
+
+
+def get_suffix(input_url: str) -> str:
+    """Extract the suffix from a url
+
+    Args:
+        input_url (str): URL from get URI
+
+    Returns:
+        str: Just the suffix
+    """
+    last_section = input_url.split("/")[-1:]
+    components = last_section[0].split(".")
+    if len(components) > 1:
+        return "." + components[-1:][0]
+
+
+def check_input(message: str, default_val: str):
+    print(message, default_val)
+    print("Hit enter to accept or enter new value.")
+    input_str = input()
+
+    if input_str != "":
+        return input_str
+    else:
+        return default_val
+
+
+def check_bad_ipfs(url: str):
+
+    url = url.lower()
+    if "ipfs" in url:
+
+        if url[:7] != "ipfs://" and url[:21] != "https://ipfs.io/ipfs/":
+            print(
+                "Warning - an IPFS link has been detected but it is not using ipfs:// syntax."
+            )
+            print(
+                "Please reformat like this: ipfs://QmNN69NeVQJ3iCscZvxgrzdUdRuXD3E7gRZWesDcEjpPTt/"
+            )
+
+
+def get_variables(provider: str):
+    print("Enter contract address e.g. 0x9372b371196751dd2F603729Ae8D8014BbeB07f6")
+    contract_address: str = input()
+
+    url_root: str = ""
+    suffix: str = ""
+
+    try:
+        contract = asyncio.run(blockchain.get_w3_contract(contract_address, provider))
+        metadata_url = blockchain.get_individual_token_url(contract, 1)[1]
+        try:
+            url_root = clean_url(metadata_url)
+            suffix = get_suffix(metadata_url)
+        except:
+            print("Error automatically extracting ")
+            raise
+    except:
+        print("Error reading blockchain. Check provider (e.g. Infura)")
+        raise
+
+    check_bad_ipfs(metadata_url)
+
+    url_root = check_input("URL expected to be", url_root)
+    suffix = check_input("Suffix expected to be", suffix)
+
+    print("Enter limit for how many tokens e.g. 100")
+    limit: int = int(input())
+
+    return url_root, suffix, limit, contract_address
+
+
 if __name__ == "__main__":
 
     # parser = argparse.ArgumentParser(description="Rip an NFT collection.")
@@ -80,17 +168,14 @@ if __name__ == "__main__":
     #     print("Called with", args.url, args.limit)
     #     asyncio.run(main(args))
     # else:
-    print("Enter contract address e.g. 0x9372b371196751dd2F603729Ae8D8014BbeB07f6")
-    contract: str = input()
-    print("Enter full url e.g. ipfs://QmNN69NeVQJ3iCscZvxgrzdUdRuXD3E7gRZWesDcEjpPTt/")
-    url: str = input()
-    print("Enter limit for how many tokens e.g. 100")
-    limit: int = int(input())
-    print(
-        "Enter filename suffix e.g. .json (including the dot) or hit enter if nothing"
-    )
-    suffix: str = input()
-    asyncio.run(main(url, limit, suffix, contract))
 
+    INFURA_URL = config("INFURA_URL")
 
-# "ipfs://QmNN69NeVQJ3iCscZvxgrzdUdRuXD3E7gRZWesDcEjpPTt/"
+    if INFURA_URL is None:
+        print(
+            "You must set INFURA_URL env. variable. e.g. https://mainnet.infura.io/v3/YOUR_TOKEN_HERE"
+        )
+
+    url_root, suffix, limit, contract_address = get_variables(INFURA_URL)
+
+    asyncio.run(main(url_root, limit, suffix, contract_address))
