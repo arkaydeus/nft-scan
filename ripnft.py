@@ -68,6 +68,8 @@ async def main(url: str, limit: int, suffix: str, contract: str):
         for asset in assets:
             df.loc[df.index == int(asset.token_id), "Price"] = asset.current_price
 
+        df = df[[col for col in df.columns if col != "OS link"] + ["OS link"]]
+
         filename = f"output/output {str(datetime.now())} with-price.xlsx"
         df.to_excel(filename)
 
