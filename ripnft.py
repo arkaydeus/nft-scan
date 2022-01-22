@@ -3,6 +3,7 @@ import asyncio
 from datetime import datetime
 from typing import List
 import sys
+import aiohttp
 
 from decouple import config
 from pandas import DataFrame
@@ -48,7 +49,13 @@ async def main(url: str, limit: int, suffix: str, contract: str):
     #     url = f"ipfs://{args.url}/"
     # else:
     #     url = args.url
-    data = await get_data(url=url, limit=limit, suffix=suffix)
+
+    try:
+        data = await get_data(url=url, limit=limit, suffix=suffix)
+    except aiohttp.InvalidURL:
+        print(f"Invalid URL: {url}")
+        sys.exit(1)
+
     df: DataFrame = data_frame(data, contract)
 
     if df is None:
@@ -153,7 +160,11 @@ def get_variables(provider: str):
     suffix = check_input("Suffix expected to be", suffix)
 
     print("Enter limit for how many tokens e.g. 100")
-    limit: int = int(input())
+    try:
+        limit: int = int(input())
+    except:
+        print("Bad number")
+        sys.exit(1)
 
     return url_root, suffix, limit, contract_address
 
