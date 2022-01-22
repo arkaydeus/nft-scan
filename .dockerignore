@@ -1,2 +1,4 @@
 *.ipynb
 output
+.ipynb_checkpoints
+env
